@@ -29,7 +29,11 @@ const Register = () => {
             });
             navigate('/login');
         } catch (err) {
-            setError(err.response?.data?.error || 'Registration failed. Please try again.');
+            if (!err.response) {
+                setError('Cannot reach the server. It may be starting up — please wait 30 seconds and try again.');
+            } else {
+                setError(err.response?.data?.error || 'Registration failed. Please try again.');
+            }
         } finally {
             setLoading(false);
         }

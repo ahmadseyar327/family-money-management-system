@@ -24,7 +24,11 @@ const Login = () => {
             login(res.data.user, res.data.token);
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to login. Please check your credentials.');
+            if (!err.response) {
+                setError('Cannot reach the server. It may be starting up — please wait 30 seconds and try again.');
+            } else {
+                setError(err.response?.data?.error || 'Failed to login. Please check your credentials.');
+            }
         } finally {
             setLoading(false);
         }
