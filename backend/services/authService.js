@@ -4,19 +4,21 @@ const jwt = require('jsonwebtoken');
 
 class AuthService {
     async register({ email, password }) {
+        const lowerEmail = email.toLowerCase();
         const password_hash = await bcrypt.hash(password, 10);
         const { rows } = await db.query(
             'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
-            [email, password_hash]
+            [lowerEmail, password_hash]
         );
         return rows[0];
     }
 
     async login({ email, password }) {
-        console.log('[AuthService] Starting login for:', email);
+        const lowerEmail = email.toLowerCase();
+        console.log('[AuthService] Starting login for:', lowerEmail);
         try {
             console.log('[AuthService] Querying database for user...');
-            const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+            const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [lowerEmail]);
             const user = rows[0];
             console.log('[AuthService] User found:', !!user);
 
