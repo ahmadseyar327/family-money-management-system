@@ -5,11 +5,22 @@ const jwt = require('jsonwebtoken');
 class AuthService {
     async register({ email, password }) {
         const lowerEmail = email.toLowerCase();
+        console.log('[AuthService] Register attempt for:', lowerEmail);
+        
+        // Check if user already exists
+        const { rows: existing } = await db.query('SELECT id FROM users WHERE email = $1', [lowerEmail]);
+        if (existing.length > 0) {
+            console.log('[AuthService] Register failed: Email already exists');
+            throw new Error('Email is already registered. Please login instead.');
+        }
+
         const password_hash = await bcrypt.hash(password, 10);
+        console.log('[AuthService] Creating user in database...');
         const { rows } = await db.query(
             'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
             [lowerEmail, password_hash]
         );
+        console.log('[AuthService] User created successfully');
         return rows[0];
     }
 
