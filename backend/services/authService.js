@@ -13,23 +13,43 @@ class AuthService {
     }
 
     async login({ email, password }) {
-        const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = rows[0];
+        console.log('[AuthService] Starting login for:', email);
+        try {
+            console.log('[AuthService] Querying database for user...');
+            const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+            const user = rows[0];
+            console.log('[AuthService] User found:', !!user);
 
-        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-            throw new Error('Invalid email or password');
+            if (!user) {
+                console.log('[AuthService] User not found');
+                throw new Error('Invalid email or password');
+            }
+
+            console.log('[AuthService] Comparing password...');
+            const isMatch = await bcrypt.compare(password, user.password_hash);
+            console.log('[AuthService] Password match:', isMatch);
+
+            if (!isMatch) {
+                console.log('[AuthService] Password mismatch');
+                throw new Error('Invalid email or password');
+            }
+
+            console.log('[AuthService] Signing JWT...');
+            const token = jwt.sign(
+                { id: user.id, email: user.email },
+                process.env.JWT_SECRET || 'your_jwt_secret',
+                { expiresIn: '24h' }
+            );
+            console.log('[AuthService] Login successful');
+
+            return {
+                user: { id: user.id, email: user.email },
+                token
+            };
+        } catch (err) {
+            console.error('[AuthService] Error in login:', err);
+            throw err;
         }
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET || 'your_jwt_secret',
-            { expiresIn: '24h' }
-        );
-
-        return {
-            user: { id: user.id, email: user.email },
-            token
-        };
     }
 }
 

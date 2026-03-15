@@ -31,3 +31,15 @@ yarn-error.log*
 # OS File
 .DS_Store
 Thumbs.db
+
+# Test Scripts
+backend/check_db.js
+backend/check_null_passwords.js
+backend/list_users.js
+backend/test_bcrypt.js
+backend/test_existing_login.js
+backend/test_full_flow.js
+backend/test_login.js
+backend/test_malformed_json.js
+backend/test_scenarios.js
+backend/trigger_500.js
