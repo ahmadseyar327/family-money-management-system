@@ -4,7 +4,12 @@ class AuthController {
     async register(req, res) {
         console.log('[AuthController] Register body:', req.body);
         try {
-            const user = await authService.register(req.body);
+            const { email, password } = req.body;
+            if (!email || !password) {
+                console.log('[AuthController] Register failed: Missing email or password');
+                return res.status(400).json({ error: 'Email and password are required' });
+            }
+            const user = await authService.register({ email, password });
             res.status(201).json(user);
         } catch (err) {
             console.error('[AuthController] Register error:', err);
@@ -12,7 +17,11 @@ class AuthController {
             if (err.code === 'ENETUNREACH' || err.code === 'ECONNREFUSED' || err.syscall === 'connect') {
                 return res.status(503).json({ error: 'Database connection failed. Please check your Supabase/Render networking.' });
             }
-            res.status(400).json({ error: err.message });
+            // Return specific error message for debugging (e.g., "Email already exists")
+            res.status(400).json({ 
+                error: err.message, 
+                details: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+            });
         }
     }
 

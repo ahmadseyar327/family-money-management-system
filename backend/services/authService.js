@@ -8,7 +8,10 @@ class AuthService {
         console.log('[AuthService] Register attempt for:', lowerEmail);
         
         // Check if user already exists
+        console.log('[AuthService] Checking for existing user:', lowerEmail);
         const { rows: existing } = await db.query('SELECT id FROM users WHERE email = $1', [lowerEmail]);
+        console.log('[AuthService] Existing users count:', existing.length);
+        
         if (existing.length > 0) {
             console.log('[AuthService] Register failed: Email already exists');
             throw new Error('Email is already registered. Please login instead.');
@@ -16,12 +19,17 @@ class AuthService {
 
         const password_hash = await bcrypt.hash(password, 10);
         console.log('[AuthService] Creating user in database...');
-        const { rows } = await db.query(
-            'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
-            [lowerEmail, password_hash]
-        );
-        console.log('[AuthService] User created successfully');
-        return rows[0];
+        try {
+            const { rows } = await db.query(
+                'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
+                [lowerEmail, password_hash]
+            );
+            console.log('[AuthService] User created successfully with ID:', rows[0].id);
+            return rows[0];
+        } catch (dbErr) {
+            console.error('[AuthService] Database insert error:', dbErr);
+            throw new Error(`Database error: ${dbErr.message}`);
+        }
     }
 
     async login({ email, password }) {
