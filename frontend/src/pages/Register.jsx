@@ -29,6 +29,7 @@ const Register = () => {
             });
             navigate('/login');
         } catch (err) {
+            console.error('Registration error details:', err.response?.data);
             if (!err.response) {
                 setError('Cannot reach the server. It may be starting up — please wait 30 seconds and try again.');
             } else {

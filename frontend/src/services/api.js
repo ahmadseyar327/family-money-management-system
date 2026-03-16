@@ -18,4 +18,23 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Only redirect if NOT on login page and request wasn't for login
+            const isLoginRequest = error.config.url.includes('/auth/login');
+            const isLoginPage = window.location.pathname === '/login';
+
+            if (!isLoginRequest && !isLoginPage) {
+                console.error('Unauthorized (401) - Logging out...');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

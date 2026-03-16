@@ -9,13 +9,24 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (token) {
-            // In a real app, you might want to verify the token with the backend here
-            const storedUser = JSON.parse(localStorage.getItem('user'));
-            setUser(storedUser);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        try {
+            if (token) {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    setUser(JSON.parse(storedUser));
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                }
+            }
+        } catch (err) {
+            console.error('Error initializing auth state:', err);
+            // Clear potentially corrupted state
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, [token]);
 
     const login = (userData, userToken) => {
