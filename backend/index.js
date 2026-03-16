@@ -7,13 +7,41 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+    'https://family-money-frontend.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
+
 app.use(bodyParser.json());
 
 // Request Logger
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
+});
+
+// Process Error Handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception thrown:', err);
+    process.exit(1);
 });
 
 // Routes (to be added)
@@ -31,6 +59,10 @@ app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => {
     res.send('Family Money Management API is running');
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Global Error Handler
