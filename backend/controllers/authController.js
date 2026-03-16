@@ -4,14 +4,14 @@ class AuthController {
     async register(req, res) {
         console.log('[AuthController] Register body:', req.body);
         try {
-            const { email, password } = req.body;
-            if (!email || !password) {
-                return res.status(400).json({ error: 'Email and password are required' });
-            }
-            const user = await authService.register({ email, password });
+            const user = await authService.register(req.body);
             res.status(201).json(user);
         } catch (err) {
-            console.error('[AuthController] Register error:', err.message);
+            console.error('[AuthController] Register error:', err);
+            // Handle database connection errors specifically
+            if (err.code === 'ENETUNREACH' || err.code === 'ECONNREFUSED' || err.syscall === 'connect') {
+                return res.status(503).json({ error: 'Database connection failed. Please check your Supabase/Render networking.' });
+            }
             res.status(400).json({ error: err.message });
         }
     }
@@ -27,7 +27,11 @@ class AuthController {
             console.log('Login successful for:', email);
             res.json(data);
         } catch (err) {
-            console.error('Login error:', err.message);
+            console.error('[AuthController] Login error:', err);
+            // Handle database connection errors specifically
+            if (err.code === 'ENETUNREACH' || err.code === 'ECONNREFUSED' || err.syscall === 'connect') {
+                return res.status(503).json({ error: 'Database connection failed. Please check your Supabase/Render networking.' });
+            }
             res.status(401).json({ error: err.message });
         }
     }
